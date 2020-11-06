@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dist/css/style.min.css">
+    <script src="js/main.js" type="module"></script>
+    <title>SnagMyWeather</title>
+</head>
+<body>
+    <header>
+        <h1 class="mainHeading" tabindex="0">SnagMyWeather</h1>
+    </header>
+    <main>
+        
+        <section class="newLocation">
+            <form id="locationForm">
+                <label for="city">Get weather for a new city</label>
+                <input id="city" type="text" size="40" autocomplete="off" placeholder="Lookup City" tabindex="0">
+                <button id="getWeather" class="button" title="Get Weather" aria-label="Get Weather" tabindex="0">&#128269;</button>
+            </form>
+        </section>
+        <section class="weatherContainer">
+            <div class="weatherTitle">
+                <h2 tabindex="0">Current Weather</h2>
+                <button id="makeDefault" class="button" title="make default city" aria-label="Set current City as Default" tabindex="0">Default</button>
+            </div>
+            <hr />
+            <div id="listItems">
+                
+            </div>
+            <p id="confirmation" class="confirmation" aria-live="assertive"></p>
+
+        </section>
+    </main>
+</body>
+</html>
