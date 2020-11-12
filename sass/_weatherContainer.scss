@@ -1,16 +1,17 @@
 .weatherContainer {
   min-height: 60vh;
-  padding: 0.75rem;
+  padding: 0px;
   box-shadow: 4px 2px 5px #000;
 
-  .weatheritle {
+  .weatherTitle {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    padding: 0.75rem;
 
     button {
-      font-size: 1rem;
-      background-color: $clear-button-color;
+      font-size: 1.7rem;
+      background-color: $save-button-color;
       padding: 0 0.1rem;
       margin-bottom: 0.5rem;
       @include mq(768px) {
@@ -23,27 +24,49 @@
     }
   }
 
-  .item {
+  .wxHeader {
+    margin-top: 1rem;
+    width: 100%;
+    background-color: lightgray;
+    padding: 0.25rem;
+  }
+  .weatherSummary {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
-    padding-top: 1rem;
+    padding-left: 1.25rem;
+    padding-top: 0.5rem;
+    padding-right: 1.25rem;
 
-    input[type="checkbox"] {
+    .weatherIcon {
       text-align: center;
-      width: 2.5rem;
-      height: 2.5rem;
-      min-width: 48px;
-      min-height: 48px;
-      cursor: pointer;
-      margin-right: 1.5rem;
     }
+    .weatherDesc {
+      text-align: center;
 
-    input[type="checkbox"]:focus + label {
-      text-decoration: underline;
+      .mainTemp {
+        font-size: 5rem;
+        font-weight: bold;
+      }
+
+      .feelsLikeTemp {
+        font-size: 0.8rem;
+      }
     }
+  }
 
-    label {
+  .condition {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 1.25rem;
+    padding-top: 0.5rem;
+    padding-right: 1.25rem;
+
+    .conditionName {
+      font-size: 1.1rem;
+    }
+    .conditionValue {
       font-size: 1.1rem;
     }
   }

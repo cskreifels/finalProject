@@ -5,7 +5,7 @@ $container-bordercolor: #000;
 $textbox-bordercolor: lightgrey;
 $button-textcolor: #fff;
 $search-button-color: #4caf50;
-$clear-button-color: #9f6060;
+$save-button-color: #4caf50;
 
 @mixin mq($size) {
   @media only screen and (min-width: $size) {
@@ -38,7 +38,7 @@ body {
 
 section {
   background-color: $container-bgcolor;
-  width: 90%;
+  width: 95%;
   max-width: 700px;
   margin: auto;
   border: 1px solid $container-bordercolor;
