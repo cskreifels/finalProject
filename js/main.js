@@ -15,36 +15,56 @@ const initApp = () => {
     sendWxToScreen(67152);
 }
 
-const getWx = async (zip) => {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${zip}&appid=${WEATHER_API_KEY}&units=imperial`); 
+const getLatLong = async (zip) => {
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${zip}&appid=${WEATHER_API_KEY}&units=imperial`);
     const resJSON = await response.json();
+    return resJSON;
+
+}
+const getWx = async (latLong) => {
+
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${latLong.coord.lat}&lon=${latLong.coord.lon}&appid=${WEATHER_API_KEY}&units=imperial`); 
+    const resJSON = await response.json();
+    console.log(resJSON);
     return resJSON;
 }
 
 
+
+
 const sendWxToScreen = async (zip) => {
+    // Get Coordinates and City Name
+    const latLong = await getLatLong(zip);
+
     // Get Current Conditions
-    const currentWx = await getWx(zip);
+
+    const oneCallWx = await getWx(latLong);
 
     // Set City Name
-    document.getElementById("cityName").textContent = currentWx.name;
+    document.getElementById("cityName").textContent = latLong.name;
     
     // Build Current Conditions Header
     buildHeader("Current Conditions");
 
     // Build the Current Weather Icon Div
-    buildIconDiv(currentWx.weather[0].icon, currentWx.weather[0].description, currentWx.main.temp, currentWx.main.feels_like);
+    buildIconDiv(oneCallWx.current.weather[0].icon, oneCallWx.current.weather[0].description, oneCallWx.current.temp, oneCallWx.current.feels_like);
     
     // Build Individual conditions
-    buildWxItem("Low", "low", "TODO", "°");
-    buildWxItem("High", "high", "TODO", "°");
-    buildWxItem("Wind", "wind", processWind(currentWx.wind), "")
-    buildWxItem("Sunrise", "sunrise", unixTimeConvert(currentWx.sys.sunrise), "");
-    buildWxItem("Sunset", "sunset", unixTimeConvert(currentWx.sys.sunset), "");
-    buildWxItem("Humidity", "humidity", currentWx.main.humidity, " %");
-    buildWxItem("Pressure", "pressure", currentWx.main.pressure, " hPA");
+    buildWxItem("Low", "low", Math.round(oneCallWx.daily[0].temp.min), "°");
+    buildWxItem("High", "high", Math.round(oneCallWx.daily[0].temp.max), "°");
+    buildWxItem("Wind", "wind", processWind(oneCallWx.current), "")
+    buildWxItem("Sunrise", "sunrise", unixTimeConvert(oneCallWx.daily[0].sunrise, "time"), "");
+    buildWxItem("Sunset", "sunset", unixTimeConvert(oneCallWx.daily[0].sunset, "time"), "");
+    buildWxItem("Humidity", "humidity", oneCallWx.current.humidity, " %");
+    buildWxItem("Pressure", "pressure", oneCallWx.current.pressure, " hPA");
 
-    buildHeader("5-Day Forecast");
+    buildHeader("Daily Forecast");
+
+    for (let day = 0; day < 7; day++) {
+        buildForecastDay(oneCallWx.daily[day]);
+    }
+
+
 }
 
 const buildIconDiv = (icon, desc, temp, feelsLike) => {
@@ -95,24 +115,43 @@ function capital(str)
 }
 
 //convert Unix time to normal time
-const unixTimeConvert = (timecode) => {
-
+const unixTimeConvert = (timecode, format) => {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     // multiply timecode by 1000 so that the argument is in milliseconds, not seconds.
-    const date = new Date(timecode * 1000);
-    // Hours part from the timestamp
-    const hours = date.getHours();
-    // Minutes part from the timestamp
-    const minutes = "0" + date.getMinutes();
+    const tc = new Date(timecode * 1000);
 
+    const day = days[tc.getUTCDay()];
+    const month = months[tc.getUTCMonth()]
+    const date = tc.getUTCDate();
+    // Hours part from the timestamp
+    const hours = tc.getHours();
+    // Minutes part from the timestamp
+    const minutes = "0" + tc.getMinutes();
     // Format to 12-hour format if needed and return
-    if (hours > 12) {
-        return hours - 12 + ':' + minutes.substr(-2) + " pm";
+        if (hours > 12) {
+        const time = hours - 12 + ':' + minutes.substr(-2) + " pm";
     }
     // Will display time in 10:30 am format
-   return hours + ':' + minutes.substr(-2) + " am";
+    const time = hours + ':' + minutes.substr(-2) + " am";
+
+    if (format === "time") {
+        return time;
+    } else if (format === "date") {
+        return month + " " + date;
+    } else if (format === "day") {
+        return day;
+    } else if (format === "shortDate") {
+        return day.substr(0,3) + ", " + month.substr(0,3) + " " + date;    
+    } else if (format === "full") {
+        return day + ", " + month + " " + date;
+    } else {
+        return day + ", " + month + " " + date + " " + time;
+    }
 }
+
 const processWind = (windInfo) => {
-    return Math.round(windInfo.speed) + " mph" + " " + getWindDirection(windInfo.deg);
+    return Math.round(windInfo.wind_speed) + " mph" + " " + getWindDirection(windInfo.wind_deg);
 }
 
 const getWindDirection = (degrees) => {
@@ -126,4 +165,32 @@ const getWindDirection = (degrees) => {
     if (degrees >= 292 && degrees < 337 ) return "NW";
     return "N";
 
+}
+
+const buildForecastDay = (day) => {
+    console.log(day);
+    const div = document.createElement("div");
+    div.className = "forecast";
+    const iconDiv = document.createElement("div");
+    iconDiv.className = "forecastIcon";
+    iconDiv.innerHTML = `<img src="http://openweathermap.org/img/wn/${day.weather[0].icon}.png">`;
+    const valueDiv = document.createElement("div");
+    valueDiv.className = "forecastValue";
+    valueDiv.tabIndex = 0;
+    valueDiv.innerHTML = "<span class='arrow'>&#8593;</span> " + Math.round(day.temp.max) + "° <span class='arrow'>&#8595;</span> " + Math.round(day.temp.min) + "°";
+    const labelDiv = document.createElement("div");
+    labelDiv.className = "forecastDayName";
+    const datePar = document.createElement("p");
+    datePar.className = "datePar";
+    datePar.textContent = unixTimeConvert(day.dt, "shortDate");
+    const precipPar = document.createElement("p");
+    precipPar.className = "precipPar";
+    precipPar.textContent = "Precipitation: " + Math.round(day.pop * 10) + "%";
+    labelDiv.appendChild(datePar);
+    labelDiv.appendChild(precipPar); 
+    div.appendChild(iconDiv);
+    div.appendChild(labelDiv);
+    div.appendChild(valueDiv);
+    const container = document.getElementById("currentWeather");
+    container.appendChild(div);
 }

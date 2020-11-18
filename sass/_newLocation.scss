@@ -30,11 +30,11 @@
     }
 
     button {
-      font-size: 1.25rem;
+      font-size: 16px;
       background-color: $search-button-color;
       padding: 0.25rem;
       @include mq(768px) {
-        font-size: 1.25rem;
+        font-size: 16px;
       }
     }
   }

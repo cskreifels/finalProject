@@ -1,6 +1,10 @@
-$default-font-color: #000;
-$background-color: #0f6737;
-$container-bgcolor: #f2f2f2;
+$default-font-color: rgb(255, 255, 255);
+$background-color: #fff;
+$forecast-background-color: rgba(0, 0, 0, 0.5);
+$forecast-color: #fff;
+$header-background-color: rgba(0, 0, 0, 0.8);
+$header-color: #fff;
+$container-bgcolor: #0f6737;
 $container-bordercolor: #000;
 $textbox-bordercolor: lightgrey;
 $button-textcolor: #fff;
@@ -33,14 +37,16 @@ body {
 
 body {
   padding: 20px;
-  background-color: $background-color;
+  background: rgb(9, 121, 26);
+  background: linear-gradient(
+    137deg,
+    rgba(9, 121, 26, 1) 35%,
+    rgba(0, 255, 111, 0.5270483193277311) 100%
+  );
 }
 
 section {
-  background-color: $container-bgcolor;
   width: 95%;
   max-width: 700px;
   margin: auto;
-  border: 1px solid $container-bordercolor;
-  border-radius: 10px;
 }

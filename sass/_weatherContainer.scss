@@ -1,7 +1,6 @@
 .weatherContainer {
   min-height: 60vh;
   padding: 0px;
-  box-shadow: 4px 2px 5px #000;
 
   .weatherTitle {
     display: flex;
@@ -15,7 +14,8 @@
       padding: 0 0.1rem;
       margin-bottom: 0.5rem;
       @include mq(768px) {
-        padding: 0 0.5rem;
+        font-size: 1.2rem;
+        padding: 0 0.1rem;
       }
     }
 
@@ -27,8 +27,9 @@
   .wxHeader {
     margin-top: 1rem;
     width: 100%;
-    background-color: lightgray;
+    background-color: $header-background-color;
     padding: 0.25rem;
+    color: $header-color;
   }
   .weatherSummary {
     display: flex;
@@ -73,5 +74,34 @@
   .confirmation {
     position: absolute;
     left: -10000px;
+  }
+
+  .forecast {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: $forecast-background-color;
+    border-top: $forecast-color solid 1px;
+
+    .forecastIcon {
+      width: 50px;
+    }
+    .arrow {
+      font-size: 2rem;
+      color: $forecast-color;
+    }
+    .forecastDayName {
+      font-size: 0.9rem;
+      color: $forecast-color;
+    }
+    .forecastValue {
+      font-size: 1.2rem;
+      color: $forecast-color;
+    }
+    .precipPar {
+      font-size: 0.7rem;
+      color: $forecast-color;
+    }
   }
 }
