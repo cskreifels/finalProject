@@ -1,6 +1,7 @@
 .weatherContainer {
   min-height: 60vh;
   padding: 0px;
+  text-shadow: black 1px 1px;
 
   .weatherTitle {
     display: flex;
@@ -92,8 +93,12 @@
       color: $forecast-color;
     }
     .forecastDayName {
-      font-size: 0.9rem;
+      font-size: 1.2rem;
       color: $forecast-color;
+
+      @include mqMax(400px) {
+        font-size: 0.9rem;
+      }
     }
     .forecastValue {
       font-size: 1.2rem;
@@ -102,6 +107,10 @@
     .precipPar {
       font-size: 0.7rem;
       color: $forecast-color;
+
+      @include mqMax(400px) {
+        font-size: 0.6rem;
+      }
     }
   }
 }

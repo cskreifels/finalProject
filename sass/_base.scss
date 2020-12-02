@@ -10,9 +10,16 @@ $textbox-bordercolor: lightgrey;
 $button-textcolor: #fff;
 $search-button-color: #4caf50;
 $save-button-color: #4caf50;
+$error-font-color: #ececec;
 
 @mixin mq($size) {
   @media only screen and (min-width: $size) {
+    @content;
+  }
+}
+
+@mixin mqMax($size) {
+  @media only screen and (max-width: $size) {
     @content;
   }
 }
@@ -37,11 +44,15 @@ body {
 
 body {
   padding: 20px;
+
+  @include mqMax(400px) {
+    padding: 0px;
+  }
   background: rgb(9, 121, 26);
   background: linear-gradient(
     137deg,
-    rgba(9, 121, 26, 1) 35%,
-    rgba(0, 255, 111, 0.5270483193277311) 100%
+    rgba(9, 121, 26, 1) 20%,
+    rgba(0, 255, 111, 0.5270483193277311) 80%
   );
 }
 

@@ -1,5 +1,4 @@
 .newLocation {
-  position: sticky;
   top: 0;
   margin-bottom: 1rem;
   padding: 0.75rem;
@@ -18,7 +17,7 @@
     input[type="text"] {
       width: 80%;
       font-size: 1.25rem;
-      border: 2px solid $textbox-bordercolor;
+      border: 1px solid $textbox-bordercolor;
       border-radius: 10px;
       padding: 0.75rem;
       outline: none;
@@ -37,5 +36,11 @@
         font-size: 16px;
       }
     }
+  }
+
+  .error {
+    color: $error-font-color;
+    margin-top: 10px;
+    text-shadow: black 1px 1px;
   }
 }

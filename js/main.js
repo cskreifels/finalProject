@@ -1,4 +1,11 @@
 // import API Key
+
+// Left to do
+// 1. Style Error Message
+// 2. Local Storage
+// 3. Accessibility
+
+
 import {WEATHER_API_KEY} from "./apikey.js";
 
 // Beginning of Fetch API code
@@ -12,58 +19,94 @@ document.addEventListener("readystatechange", (event) => {
 
 const initApp = () => {
     // TODO: Make zip code dynamic
-    sendWxToScreen(67152);
+    sendWxToScreen("Wellington");
+
+    // Create listener for select new city button
+    document.getElementById("selectButton").addEventListener("click", (event) => {
+        showSearchBox();
+    });
+
+    // create listener for city search button
+    document.getElementById("getWeather").addEventListener("click", (event) => {
+        event.preventDefault();
+        selectNewCity();
+    });
+
 }
 
-const getLatLong = async (zip) => {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${zip}&appid=${WEATHER_API_KEY}&units=imperial`);
-    const resJSON = await response.json();
-    return resJSON;
+const handleErrors = (response) => {
+    if (!response.ok) {
+        throw Error(response.statusText);
+    }
+
+    return response;
+
+}
+const getLatLong = async (city) => {
+    const resp = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${WEATHER_API_KEY}&units=imperial`).then((response) => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Something went wrong');
+        }
+        })
+        .catch((error) => {
+        console.log(error)
+        });
+    return resp;
+    
+    
+    
+    
 
 }
 const getWx = async (latLong) => {
 
     const response = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${latLong.coord.lat}&lon=${latLong.coord.lon}&appid=${WEATHER_API_KEY}&units=imperial`); 
     const resJSON = await response.json();
-    console.log(resJSON);
     return resJSON;
 }
 
 
 
 
-const sendWxToScreen = async (zip) => {
+const sendWxToScreen = async (city, state) => {
     // Get Coordinates and City Name
-    const latLong = await getLatLong(zip);
+    try { 
+        const latLong = await getLatLong(city,state);
+            // Get Current Conditions
+        const oneCallWx = await getWx(latLong);
+        // Set City Name
+        document.getElementById("cityName").textContent = latLong.name;
+        
+        // Build Current Conditions Header
+        buildHeader("Current Conditions");
 
-    // Get Current Conditions
+        // Build the Current Weather Icon Div
+        buildIconDiv(oneCallWx.current.weather[0].icon, oneCallWx.current.weather[0].description, oneCallWx.current.temp, oneCallWx.current.feels_like);
+        
+        // Build Individual conditions
+        buildWxItem("Low", "low", Math.round(oneCallWx.daily[0].temp.min), "°");
+        buildWxItem("High", "high", Math.round(oneCallWx.daily[0].temp.max), "°");
+        buildWxItem("Wind", "wind", processWind(oneCallWx.current), "")
+        buildWxItem("Sunrise", "sunrise", unixTimeConvert(oneCallWx.daily[0].sunrise, "time"), "");
+        buildWxItem("Sunset", "sunset", unixTimeConvert(oneCallWx.daily[0].sunset, "time"), "");
+        buildWxItem("Humidity", "humidity", oneCallWx.current.humidity, " %");
+        buildWxItem("Pressure", "pressure", oneCallWx.current.pressure, " hPA");
 
-    const oneCallWx = await getWx(latLong);
+        buildHeader("Daily Forecast");
 
-    // Set City Name
-    document.getElementById("cityName").textContent = latLong.name;
-    
-    // Build Current Conditions Header
-    buildHeader("Current Conditions");
-
-    // Build the Current Weather Icon Div
-    buildIconDiv(oneCallWx.current.weather[0].icon, oneCallWx.current.weather[0].description, oneCallWx.current.temp, oneCallWx.current.feels_like);
-    
-    // Build Individual conditions
-    buildWxItem("Low", "low", Math.round(oneCallWx.daily[0].temp.min), "°");
-    buildWxItem("High", "high", Math.round(oneCallWx.daily[0].temp.max), "°");
-    buildWxItem("Wind", "wind", processWind(oneCallWx.current), "")
-    buildWxItem("Sunrise", "sunrise", unixTimeConvert(oneCallWx.daily[0].sunrise, "time"), "");
-    buildWxItem("Sunset", "sunset", unixTimeConvert(oneCallWx.daily[0].sunset, "time"), "");
-    buildWxItem("Humidity", "humidity", oneCallWx.current.humidity, " %");
-    buildWxItem("Pressure", "pressure", oneCallWx.current.pressure, " hPA");
-
-    buildHeader("Daily Forecast");
-
-    for (let day = 0; day < 7; day++) {
-        buildForecastDay(oneCallWx.daily[day]);
+        for (let day = 0; day < 7; day++) {
+            buildForecastDay(oneCallWx.daily[day]);
+        }
+        return true;
     }
 
+    catch {
+        displayError();
+        console.log ('Caught error in sendWxToScreen');
+        return false;
+    }
 
 }
 
@@ -168,7 +211,6 @@ const getWindDirection = (degrees) => {
 }
 
 const buildForecastDay = (day) => {
-    console.log(day);
     const div = document.createElement("div");
     div.className = "forecast";
     const iconDiv = document.createElement("div");
@@ -193,4 +235,70 @@ const buildForecastDay = (day) => {
     div.appendChild(valueDiv);
     const container = document.getElementById("currentWeather");
     container.appendChild(div);
+}
+
+const showSearchBox = () => {
+    document.getElementById("newLocation").style.display = "block";
+    document.getElementById("city").focus();
+}
+const hideSearchBox = () => {
+    document.getElementById("newLocation").style.display = "none";
+}
+const selectNewCity = async () => {
+     
+    // If an error message exists, clear it first
+    if(document.getElementById("errorP")) {
+        clearError();
+    }   
+
+    //Check if anything was entered
+    const searchText = document.getElementById("city").value.trim();
+    // if search box is empty, close the search window
+    if (!searchText) {
+        hideSearchBox();
+        return;
+    }
+    clearWxDisplay();
+    if (await sendWxToScreen(searchText)) {
+        if(document.getElementById("errorP")) {
+            clearError();
+        }
+        hideSearchBox();
+        return;
+    } else {
+        //if return is false, it did not process correctly, revert back to default value
+        sendWxToScreen("Wellington");
+    }
+    
+   
+        
+        
+    
+}
+
+const clearWxDisplay = () => {
+    const parentElement = document.getElementById("currentWeather");
+    deleteContents(parentElement);
+}
+
+const deleteContents = (parentElement) => {
+    let child = parentElement.lastElementChild;
+    while (child) {
+        parentElement.removeChild(child);
+        child = parentElement.lastElementChild;
+    }
+}
+
+const displayError = () => {
+    const parentElement = document.getElementById("newLocation");
+    const errorP = document.createElement("p");
+    errorP.className = "error";
+    errorP.id = "errorP"
+    errorP.textContent = "City Not Found, Please Try Again.";
+    parentElement.appendChild(errorP);
+}
+
+const clearError = () => {
+    const errorP = document.getElementById("errorP");
+    errorP.remove();
 }
