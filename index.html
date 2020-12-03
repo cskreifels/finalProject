@@ -14,22 +14,23 @@
     </header>
     <main>
         
-        <section id="newLocation" class="newLocation">
+        <section id="newLocation" class="newLocation" >   
             <form id="locationForm">
                 <label for="city">Get weather for a new city</label>
-                <input id="city" type="text" size="40" autocomplete="off" placeholder="Lookup City" tabindex="0">
-                <button id="getWeather" class="button" title="Get Weather" aria-label="Get Weather" tabindex="0">&#128269;</button>
+                <input id="city" type="text" size="40" autocomplete="off" aria-label="Enter city to get weather data" placeholder="City name" tabindex="0">
+                <button id="getWeather" class="button" title="Get Weather" aria-label="Get Weather for this City" tabindex="0">&#128269;</button>
             </form>
         </section>
-        <section class="weatherContainer">
-            <div class="weatherTitle">
-                <h2 id="cityName" tabindex="0"></h2>
+        <section class="weatherContainer" aria-label="Weather Data for current city.">
+            <div class="weatherTitle" id="weatherTitle">
+                <h2 id="cityName" tabindex="0" ></h2>
                 <div class="buttonDiv">
                     <button id="selectButton" class="button" title="Select New City" aria-label="Select New City" tabindex="0">&#128269;</button>
                     <button id="makeDefault" class="button" title="make default city" aria-label="Set current City as Default" tabindex="0">&#128427</button>
                 </div>
                 
             </div>
+            <div id="defaultConfirm"></div>
             <hr />
             <div id="currentWeather">
                 

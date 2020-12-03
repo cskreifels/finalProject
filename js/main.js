@@ -1,9 +1,8 @@
 // import API Key
 
 // Left to do
-// 1. Style Error Message
-// 2. Local Storage
-// 3. Accessibility
+// 1. Local Storage
+// 2. Accessibility
 
 
 import {WEATHER_API_KEY} from "./apikey.js";
@@ -18,8 +17,9 @@ document.addEventListener("readystatechange", (event) => {
 });
 
 const initApp = () => {
+
     // TODO: Make zip code dynamic
-    sendWxToScreen("Wellington");
+    sendWxToScreen(getStorage());
 
     // Create listener for select new city button
     document.getElementById("selectButton").addEventListener("click", (event) => {
@@ -32,16 +32,13 @@ const initApp = () => {
         selectNewCity();
     });
 
+    // create listener for save default city
+    document.getElementById("makeDefault").addEventListener("click", (event) => {
+        event.preventDefault();
+        setStorage();
+    });
 }
 
-const handleErrors = (response) => {
-    if (!response.ok) {
-        throw Error(response.statusText);
-    }
-
-    return response;
-
-}
 const getLatLong = async (city) => {
     const resp = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${WEATHER_API_KEY}&units=imperial`).then((response) => {
         if (response.ok) {
@@ -104,7 +101,6 @@ const sendWxToScreen = async (city, state) => {
 
     catch {
         displayError();
-        console.log ('Caught error in sendWxToScreen');
         return false;
     }
 
@@ -115,12 +111,12 @@ const buildIconDiv = (icon, desc, temp, feelsLike) => {
     div.className = "weatherSummary";
     const iconDiv = document.createElement("div");
     iconDiv.className = "weatherIcon";
-    iconDiv.innerHTML = `<img src="http://openweathermap.org/img/wn/${icon}@2x.png">`;
+    iconDiv.innerHTML = `<img src="http://openweathermap.org/img/wn/${icon}@2x.png" tabindex="0" aria-label="WeatherImage: ${capital(desc)}">`;
     const tempDiv = document.createElement("div");
     tempDiv.className = "weatherDesc";
-    tempDiv.innerHTML =  `<p class="mainTemp">${Math.round(temp)}°</p>`;
-    tempDiv.innerHTML += `<p class="feelsLikeTemp">Feels Like: ${Math.round(feelsLike)}°</p>`;
-    tempDiv.innerHTML += `<p class="feelsLikeTemp">Skies: ${capital(desc)}</p>`;
+    tempDiv.innerHTML =  `<p class="mainTemp" tabIndex="0" aria-label="Current Temperature: ${Math.round(temp)}°">${Math.round(temp)}°</p>`;
+    tempDiv.innerHTML += `<p class="feelsLikeTemp" tabIndex="0">Feels Like: ${Math.round(feelsLike)}°</p>`;
+    tempDiv.innerHTML += `<p class="feelsLikeTemp" tabIndex="0">Skies: ${capital(desc)}</p>`;
     div.appendChild(iconDiv);
     div.appendChild(tempDiv);
     const container = document.getElementById("currentWeather");
@@ -138,6 +134,7 @@ const buildWxItem = (name, id, value, unit) => {
     const labelDiv = document.createElement("div");
     labelDiv.className = "conditionName";
     labelDiv.id = id;
+    labelDiv.tabIndex = 0;
     labelDiv.textContent = name;
     div.appendChild(labelDiv);
     div.appendChild(valueDiv);
@@ -147,7 +144,8 @@ const buildWxItem = (name, id, value, unit) => {
 const buildHeader = (name) => {
     const div = document.createElement("div");
     div.className = "wxHeader";
-    div.innerHTML = `<h3>${name}</h3>`;
+    div.id = name.replace(/\s+/g, '');
+    div.innerHTML = `<h3 tabindex="0">${name}</h3>`;
     const container = document.getElementById("currentWeather");
     container.appendChild(div);
 }
@@ -213,11 +211,14 @@ const getWindDirection = (degrees) => {
 const buildForecastDay = (day) => {
     const div = document.createElement("div");
     div.className = "forecast";
+    div.setAttribute('aria-label', unixTimeConvert(day.dt, "shortDate"));
+    div.tabIndex = 0;
     const iconDiv = document.createElement("div");
     iconDiv.className = "forecastIcon";
-    iconDiv.innerHTML = `<img src="http://openweathermap.org/img/wn/${day.weather[0].icon}.png">`;
+    iconDiv.innerHTML = `<img src="http://openweathermap.org/img/wn/${day.weather[0].icon}.png" tabindex="0" aria-label="${day.weather[0].description}">`;
     const valueDiv = document.createElement("div");
     valueDiv.className = "forecastValue";
+    valueDiv.setAttribute('aria-label', `High: ${Math.round(day.temp.max)}°. Low: ${Math.round(day.temp.min)}°`);
     valueDiv.tabIndex = 0;
     valueDiv.innerHTML = "<span class='arrow'>&#8593;</span> " + Math.round(day.temp.max) + "° <span class='arrow'>&#8595;</span> " + Math.round(day.temp.min) + "°";
     const labelDiv = document.createElement("div");
@@ -227,6 +228,7 @@ const buildForecastDay = (day) => {
     datePar.textContent = unixTimeConvert(day.dt, "shortDate");
     const precipPar = document.createElement("p");
     precipPar.className = "precipPar";
+    precipPar.tabIndex = 0;
     precipPar.textContent = "Precipitation: " + Math.round(day.pop * 10) + "%";
     labelDiv.appendChild(datePar);
     labelDiv.appendChild(precipPar); 
@@ -243,6 +245,7 @@ const showSearchBox = () => {
 }
 const hideSearchBox = () => {
     document.getElementById("newLocation").style.display = "none";
+    document.getElementById("city").value = "";
 }
 const selectNewCity = async () => {
      
@@ -256,6 +259,8 @@ const selectNewCity = async () => {
     // if search box is empty, close the search window
     if (!searchText) {
         hideSearchBox();
+        updateScreenReaderConfirmation("cancelled", document.getElementById("cityName").textContent)
+        focusOnWx();
         return;
     }
     clearWxDisplay();
@@ -264,10 +269,12 @@ const selectNewCity = async () => {
             clearError();
         }
         hideSearchBox();
+        updateScreenReaderConfirmation("New City Selected", document.getElementById("cityName").textContent)
+        focusOnWx();
         return;
     } else {
         //if return is false, it did not process correctly, revert back to default value
-        sendWxToScreen("Wellington");
+        sendWxToScreen(getStorage());
     }
     
    
@@ -294,11 +301,61 @@ const displayError = () => {
     const errorP = document.createElement("p");
     errorP.className = "error";
     errorP.id = "errorP"
+    errorP.setAttribute("aria-live", "assertive");
     errorP.textContent = "City Not Found, Please Try Again.";
     parentElement.appendChild(errorP);
+    document.getElementById("city").focus();
+
 }
 
 const clearError = () => {
     const errorP = document.getElementById("errorP");
     errorP.remove();
+}
+
+const getStorage = () => {
+    const localStore = JSON.parse(localStorage.getItem('snagMyWeatherLocalStore'));
+    if(!localStore) {
+        
+        localStorage.setItem("snagMyWeatherLocalStore", JSON.stringify("Wellington"));
+        return "Wellington";
+    } 
+
+    return localStore;
+    
+}
+
+const setStorage = () => {
+    const myDefaultCity = document.getElementById("cityName").textContent;
+
+    localStorage.setItem("snagMyWeatherLocalStore", JSON.stringify(myDefaultCity));
+    
+    updateScreenReaderConfirmation(myDefaultCity + " saved as default city", myDefaultCity);
+    showDefaultConfirmation();
+}
+
+const updateScreenReaderConfirmation = (actionVerb, cityName) => {
+    document.getElementById("confirmation").textContent = `${actionVerb}, displaying weather for ${cityName}.`;
+};
+
+const focusOnWx = () => {
+    document.getElementById("cityName").focus();
+    
+}
+
+const showDefaultConfirmation = () => {
+    const parentElement = document.getElementById("defaultConfirm");
+    const confirmDiv = document.createElement("div");
+    confirmDiv.className = "defaultSaveConfirm";
+    confirmDiv.id = "defaultSaveConfirm";
+    confirmDiv.textContent = document.getElementById("cityName").textContent + " saved as Default City.";
+    parentElement.appendChild(confirmDiv);
+    document.getElementById("cityName").focus();
+    setTimeout(() => {
+        removeDefaultConfirmation();
+    }, 2000);
+}
+
+const removeDefaultConfirmation = () => {
+    document.getElementById("defaultSaveConfirm").remove();
 }
